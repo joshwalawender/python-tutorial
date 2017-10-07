@@ -163,16 +163,22 @@ eta.separation_3d(theta1C).to(u.lightyear)
 
 ## Exercise 1
 
-nbins = 500
+nbins = 1000
 plt.hist(evt_data['energy'], nbins)
+plt.xlabel('Energy')
+plt.ylabel('N photons')
+plt.show()
+
 
 ## Exercise 2
 
+# your code here
 # Lets figure out which events fall on the ships we want
 ii = np.in1d(evt_data['ccd_id'], [0, 1, 2, 3])
 # The ii array is a boolean array which tells us which events we want
 # We can sum that array to find out how many events we're dealing with.
 # Note that summing a boolean array is the same as counting the number of True values.
+print(ii)
 np.sum(ii)
 
 or
