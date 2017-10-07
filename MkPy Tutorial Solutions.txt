@@ -1,0 +1,209 @@
+# ------------------
+# Intro to Python 1
+# ------------------
+
+## Exercise 1
+
+objtype = {'Gal': 'Galaxy',
+           'Double': 'Double Star',
+           'PN': 'Planetary Nebula',
+           'GC':'Globular Cluster',
+           'OC': 'Open Cluster'}
+constellation = {'Peg': 'Pegasus',
+                 'Cep': 'Cepheus',
+                 'Tuc': 'Tucana',
+                 'Cas': 'Cassiopeia'}
+for targ in targets:
+    print(f"{targ[0]} is a {objtype[targ[1]]} located in {constellation[targ[2]]} with a magnitude of {targ[3]}")
+
+
+## Exercise 2
+
+# Solution
+objtype = {'Gal': 'Galaxy',
+           'Double': 'Double Star',
+           'PN': 'Planetary Nebula',
+           'GC':'Globular Cluster',
+           'OC': 'Open Cluster'}
+constellation = {'Peg': 'Pegasus',
+                 'Cep': 'Cepheus',
+                 'Tuc': 'Tucana',
+                 'Cas': 'Cassiopeia'}
+for targ in targets:
+    targ[0] = int(targ[0][3:])
+
+for targ in sorted(targets):
+    print(f"NGC {targ[0]:04d} is a {objtype[targ[1]]} located in {constellation[targ[2]]} with a magnitude of {targ[3]}")
+    
+
+
+# ------------------
+# Intro to Python 2
+# ------------------
+
+## Exercise 1
+
+from os import path
+def does_it_exist(filename):
+    if path.exists(filename):
+        basename = filename.split('.')[0]
+        return len(basename)
+    else:
+        print('File not found')
+does_it_exist('Intro to Python 2.ipynb')
+
+## Exercise 2
+
+def build_coordinate(input):
+    try:
+        coordinate = SkyCoord.from_name(input)
+    except:
+        print(f'No coordinate found for {input}')
+        return None
+    else:
+        return coordinate.galactic
+
+result = build_coordinate('M1')
+print(result)
+
+## Exercise 3
+
+class Telescope(object):
+    def __init__(self, fl, ap, pix):
+        self.focal_length = fl
+        self.aperture = ap
+        self.pixel_size = pix
+    def get_pixel_scale(self):
+        return 206.265*self.pixel_size/self.focal_length
+    def get_plate_scale(self):
+        return 206265 / self.focal_length
+    def get_focal_ratio(self):
+        return self.focal_length/1000. / self.aperture    
+
+# ------------------
+# Astropy 1
+# ------------------
+
+## Exercise 1
+
+import numpy as np
+from astropy.io import fits
+from astropy.wcs import WCS
+
+hdul = fits.open('km170920_002.fits')
+w = WCS(hdul[0].header)
+if w is not None:
+    print('I found a WCS!')
+
+
+## Exercise 2
+
+pix = w.wcs_world2pix(np.array([[271.82875, 66.47797]]), 1)
+print(pix)
+x = pix[0][0]
+y = pix[0][1]
+print(f"xpixel = {x:7.2f}")
+print(f"ypixel = {y:7.2f}")
+
+## Exercise 3
+
+im = hdul[0].data
+ss = 4
+y1 = int(y-ss)
+y2 = int(y+ss)
+x1 = int(x-ss)
+x2 = int(x+ss)
+im[y1:y2, x1:x2]
+
+
+# ------------------
+# Astropy 2
+# ------------------
+
+## Exercise 1
+
+from astropy import units as u
+temp = 98.6*u.imperial.Fahrenheit
+print(temp)
+print(temp.to(u.Kelvin, equivalencies=u.temperature()))
+print(temp.to(u.deg_C, equivalencies=u.temperature()))
+
+## Exercise 2
+
+temp_K = temp.to(u.Kelvin, equivalencies=u.temperature())
+temp_eV = temp_K.to(u.eV, equivalencies=u.temperature_energy())
+print(temp_eV)
+
+#or
+
+from astropy import constants as const
+E = const.k_B * temp_K
+E_eV = E.to(u.eV)
+print(E_eV)
+
+## Exercise 3
+
+from astropy.coordinates import SkyCoord
+theta1C = SkyCoord(ra=83.818662*u.deg, dec=-5.389679*u.deg)
+eta = SkyCoord(ra=161.264233*u.deg, dec=-59.684391*u.deg)
+eta.separation(theta1C)
+
+## Exercise 4
+
+theta1C = SkyCoord(ra=83.818662*u.deg, dec=-5.389679*u.deg, distance=1344*u.lightyear)
+eta = SkyCoord(ra=161.264233*u.deg, dec=-59.684391*u.deg, distance=2.3*u.kiloparsec)
+eta.separation_3d(theta1C)
+eta.separation_3d(theta1C).to(u.lightyear)
+
+
+# ------------------
+# Astropy 3
+# ------------------
+# http://www.astropy.org/astropy-tutorials/FITS-tables.html
+
+## Exercise 1
+
+nbins = 500
+plt.hist(evt_data['energy'], nbins)
+
+## Exercise 2
+
+# Lets figure out which events fall on the ships we want
+ii = np.in1d(evt_data['ccd_id'], [0, 1, 2, 3])
+# The ii array is a boolean array which tells us which events we want
+# We can sum that array to find out how many events we're dealing with.
+# Note that summing a boolean array is the same as counting the number of True values.
+np.sum(ii)
+
+or
+
+byccd = evt_data.group_by('ccd_id')
+byccd.groups.keys
+
+events_of_interest = byccd.groups[0:4]
+len(events_of_interest)
+
+## Exercise 3
+
+nbins = (100,100)
+img_zero, yedges, xedges = np.histogram2d(events_of_interest['x'], events_of_interest['y'], nbins)
+extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+plt.imshow(img_zero, extent=extent, interpolation='nearest', cmap='gist_yarg', origin='lower')
+
+plt.xlabel('x')
+plt.ylabel('y')
+plt.show()
+
+## Exercise 4
+
+from matplotlib.colors import LogNorm
+img_zero_mpl = plt.hist2d(events_of_interest['x'], events_of_interest['y'], nbins, cmap='viridis', norm=LogNorm())
+
+tickvals = [1,3,6,15,50,200,1000,5000]
+cbar = plt.colorbar(ticks=tickvals)
+cbar.ax.set_yticklabels([str(x) for x in tickvals])
+
+plt.xlabel('x')
+plt.ylabel('y')
+plt.show()
+
